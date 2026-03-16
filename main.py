@@ -33,15 +33,15 @@ HTML = """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
       :root {
-        --bg: #0f172a;
-        --bg-card: #020617;
-        --border-subtle: rgba(148, 163, 184, 0.25);
-        --accent: #6366f1;
-        --accent-soft: rgba(99, 102, 241, 0.18);
-        --accent-strong: #4f46e5;
-        --text: #e5e7eb;
+        --bg: #0b1020;
+        --bg-card: #0f172a;
+        --border-subtle: rgba(148, 163, 184, 0.3);
+        --accent: #22c55e;
+        --accent-soft: rgba(34, 197, 94, 0.16);
+        --accent-strong: #16a34a;
+        --text: #f9fafb;
         --text-muted: #9ca3af;
-        --danger: #f97373;
+        --danger: #fb7185;
       }
 
       *,
@@ -54,7 +54,7 @@ HTML = """
         margin: 0;
         min-height: 100vh;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: radial-gradient(circle at top, #1f2937, #020617);
+        background: radial-gradient(circle at top, #111827, #020617);
         color: var(--text);
       }
 
@@ -78,8 +78,8 @@ HTML = """
         position: relative;
         border-radius: 1rem;
         padding: 1.75rem 1.5rem 1.5rem;
-        background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.25), transparent 55%),
-                    radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.25), transparent 55%),
+        background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), transparent 55%),
+                    radial-gradient(circle at bottom right, rgba(45, 212, 191, 0.22), transparent 55%),
                     var(--bg-card);
         border: 1px solid var(--border-subtle);
         box-shadow:
@@ -91,7 +91,7 @@ HTML = """
       .history {
         border-radius: 1rem;
         padding: 1rem;
-        background: radial-gradient(circle at top right, rgba(129, 140, 248, 0.22), transparent 60%),
+        background: radial-gradient(circle at top right, rgba(45, 212, 191, 0.18), transparent 60%),
                     rgba(15, 23, 42, 0.95);
         border: 1px solid rgba(148, 163, 184, 0.35);
         box-shadow:
@@ -192,8 +192,8 @@ HTML = """
         border-radius: 0.9rem;
         padding: 0.6rem 0.75rem;
         margin-bottom: 0.9rem;
-        background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.85));
-        border: 1px solid rgba(30, 64, 175, 0.65);
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9));
+        border: 1px solid rgba(34, 197, 94, 0.65);
         text-align: right;
       }
 
@@ -234,7 +234,7 @@ HTML = """
         border-radius: 0.65rem;
         border: 1px solid rgba(148, 163, 184, 0.35);
         padding: 0.55rem 0.7rem;
-        background: rgba(15, 23, 42, 0.8);
+        background: rgba(15, 23, 42, 0.85);
         color: var(--text);
         font-size: 0.9rem;
         outline: none;
@@ -270,23 +270,23 @@ HTML = """
         background: linear-gradient(135deg, var(--accent), var(--accent-strong));
         color: white;
         box-shadow:
-          0 10px 22px rgba(79, 70, 229, 0.55),
-          0 0 0 1px rgba(129, 140, 248, 0.85);
+          0 10px 22px rgba(22, 163, 74, 0.6),
+          0 0 0 1px rgba(34, 197, 94, 0.9);
         transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
       }
 
       button:hover {
         filter: brightness(1.06);
         box-shadow:
-          0 14px 28px rgba(79, 70, 229, 0.65),
-          0 0 0 1px rgba(129, 140, 248, 0.95);
+          0 14px 28px rgba(22, 163, 74, 0.7),
+          0 0 0 1px rgba(34, 197, 94, 1);
       }
 
       button:active {
         transform: translateY(1px);
         box-shadow:
-          0 9px 18px rgba(79, 70, 229, 0.45),
-          0 0 0 1px rgba(129, 140, 248, 0.8);
+          0 9px 18px rgba(22, 163, 74, 0.55),
+          0 0 0 1px rgba(34, 197, 94, 0.9);
       }
 
       .result,
@@ -309,9 +309,9 @@ HTML = """
       }
 
       .error {
-        border-color: rgba(248, 113, 113, 0.7);
-        background: rgba(127, 29, 29, 0.35);
-        color: #fecaca;
+        border-color: rgba(248, 113, 113, 0.8);
+        background: rgba(127, 29, 29, 0.45);
+        color: #fee2e2;
       }
 
       .error::before {
