@@ -555,8 +555,12 @@ def calculator():
             graph_requested = request.form.get("graph") is not None
 
             try:
-                # Evaluate expression as a scalar (no x)
-                adv_result = safe_eval(adv_expression)
+                # Evaluate expression as a scalar. If it depends on x, skip scalar
+                # evaluation and only use it for graphing.
+                try:
+                    adv_result = safe_eval(adv_expression)
+                except NameError:
+                    adv_result = None
 
                 if graph_requested:
                     start = float(x_from or "-10")
