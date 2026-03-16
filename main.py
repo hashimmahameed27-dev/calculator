@@ -178,8 +178,15 @@ HTML = """
         padding: 0.2rem 0.6rem;
         border-radius: 999px;
         background: var(--accent-soft);
-        border: 1px solid rgba(129, 140, 248, 0.5);
-        color: #c7d2fe;
+        border: 1px solid rgba(34, 197, 94, 0.5);
+        color: #86efac;
+      }
+
+      .credit {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.02em;
       }
 
       .subtitle {
@@ -326,6 +333,15 @@ HTML = """
         margin-top: 0.2rem;
       }
 
+      .site-footer {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-subtle);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-align: center;
+      }
+
       @media (max-width: 768px) {
         .layout {
           grid-template-columns: minmax(0, 1fr);
@@ -379,6 +395,7 @@ HTML = """
             <div class="title">Calculator</div>
             <div class="badge">Python • Flask</div>
           </div>
+          <div class="credit">Built & designed by Hashim Mahameed</div>
           <div class="subtitle">
             Enter two values, pick an operation, and get the result instantly.
           </div>
@@ -521,6 +538,10 @@ HTML = """
               <img src="{{ graph_url }}" alt="Function graph" style="display:block; width:100%; height:auto;">
             </div>
           {% endif %}
+
+          <footer class="site-footer">
+            © 2025 Hashim Mahameed. All rights reserved.
+          </footer>
         </div>
       </div>
     </div>
