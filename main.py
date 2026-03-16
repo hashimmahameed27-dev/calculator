@@ -1,10 +1,27 @@
 from flask import Flask, request, render_template_string
+import math
+import io
+import base64
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 app = Flask(__name__)
 
 # Simple in-memory history for this server process
 history = []
 MAX_HISTORY = 20
+
+
+def safe_eval(expr: str, x_value: float | None = None) -> float:
+    """Evaluate a math expression safely with support for trig/exponential functions."""
+    allowed_names = {name: getattr(math, name) for name in dir(math) if not name.startswith("_")}
+    allowed_names["pi"] = math.pi
+    allowed_names["e"] = math.e
+    if x_value is not None:
+        allowed_names["x"] = x_value
+
+    return eval(expr, {"__builtins__": {}}, allowed_names)
 
 
 HTML = """
@@ -434,6 +451,76 @@ HTML = """
               <div class="expression">{{ expression }}</div>
             {% endif %}
           {% endif %}
+
+          <hr style="margin: 1.4rem 0; border: none; border-top: 1px solid rgba(30,64,175,0.6);" />
+
+          <div class="subtitle">
+            Advanced mode: use functions like <code>sin(x)</code>, <code>cos(x)</code>, <code>exp(x)</code>, <code>log(x)</code>, and constants <code>pi</code>, <code>e</code>.
+          </div>
+
+          <form method="post" novalidate>
+            <input type="hidden" name="mode" value="advanced">
+            <div>
+              <label for="expression">Expression</label>
+              <input
+                id="expression"
+                type="text"
+                name="expression"
+                inputmode="text"
+                value="{{ adv_expression or '' }}"
+                required
+              >
+            </div>
+
+            <div class="row">
+              <div>
+                <label for="x_from">Graph from x =</label>
+                <input
+                  id="x_from"
+                  type="text"
+                  name="x_from"
+                  inputmode="decimal"
+                  value="{{ x_from or '-10' }}"
+                >
+              </div>
+              <div>
+                <label for="x_to">to x =</label>
+                <input
+                  id="x_to"
+                  type="text"
+                  name="x_to"
+                  inputmode="decimal"
+                  value="{{ x_to or '10' }}"
+                >
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:0.4rem; margin-top:0.3rem;">
+              <input id="graph" type="checkbox" name="graph" {% if graph_requested %}checked{% endif %}>
+              <label for="graph" style="margin:0; text-transform:none; letter-spacing:0; font-size:0.8rem;">
+                Plot this expression as a graph
+              </label>
+            </div>
+
+            <button type="submit">Evaluate / Graph</button>
+          </form>
+
+          {% if adv_error %}
+            <div class="error">{{ adv_error }}</div>
+          {% elif adv_result is not none %}
+            <div class="result">
+              {{ adv_result }}
+            </div>
+            {% if adv_expression %}
+              <div class="expression">{{ adv_expression }}</div>
+            {% endif %}
+          {% endif %}
+
+          {% if graph_url %}
+            <div style="margin-top: 1rem; border-radius: 0.75rem; overflow: hidden; border: 1px solid rgba(30,64,175,0.8); background: #020617;">
+              <img src="{{ graph_url }}" alt="Function graph" style="display:block; width:100%; height:auto;">
+            </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -450,37 +537,100 @@ def calculator():
     result = None
     error = None
     expression = ""
+    adv_expression = ""
+    adv_result = None
+    adv_error = None
+    graph_url = None
+    x_from = ""
+    x_to = ""
+    graph_requested = False
 
     if request.method == "POST":
-        num1 = request.form.get("num1", "").strip()
-        num2 = request.form.get("num2", "").strip()
-        op = request.form.get("op", "+")
+        mode = request.form.get("mode", "basic")
 
-        try:
-            a = float(num1)
-            b = float(num2)
+        if mode == "advanced":
+            adv_expression = request.form.get("expression", "").strip()
+            x_from = request.form.get("x_from", "-10").strip()
+            x_to = request.form.get("x_to", "10").strip()
+            graph_requested = request.form.get("graph") is not None
 
-            if op == "+":
-                result = a + b
-            elif op == "-":
-                result = a - b
-            elif op == "*":
-                result = a * b
-            elif op == "/":
-                if b == 0:
-                    error = "Error: Cannot divide by zero."
+            try:
+                # Evaluate expression as a scalar (no x)
+                adv_result = safe_eval(adv_expression)
+
+                if graph_requested:
+                    start = float(x_from or "-10")
+                    end = float(x_to or "10")
+                    if start >= end:
+                        raise ValueError("Start of range must be less than end.")
+
+                    xs = np.linspace(start, end, 400)
+                    ys = []
+                    for x_val in xs:
+                        try:
+                            ys.append(safe_eval(adv_expression, x_val))
+                        except Exception:
+                            ys.append(float("nan"))
+
+                    fig, ax = plt.subplots(figsize=(4, 2.5), dpi=150)
+                    ax.plot(xs, ys, color="#4f46e5", linewidth=1.5)
+                    ax.set_facecolor("#020617")
+                    fig.patch.set_facecolor("#020617")
+                    ax.grid(True, color="#1f2937", linewidth=0.5)
+                    ax.spines["bottom"].set_color("#9ca3af")
+                    ax.spines["left"].set_color("#9ca3af")
+                    ax.tick_params(colors="#9ca3af", labelsize=7)
+
+                    buf = io.BytesIO()
+                    plt.tight_layout()
+                    fig.savefig(buf, format="png", bbox_inches="tight")
+                    plt.close(fig)
+                    buf.seek(0)
+                    graph_url = "data:image/png;base64," + base64.b64encode(buf.read()).decode(
+                        "ascii"
+                    )
+
+                # Add to history
+                history.insert(
+                    0,
+                    {
+                        "expression": adv_expression,
+                        "result": adv_result,
+                    },
+                )
+                history[:] = history[:MAX_HISTORY]
+            except Exception as exc:  # noqa: BLE001
+                adv_error = f"Could not evaluate expression: {exc}"
+        else:
+            num1 = request.form.get("num1", "").strip()
+            num2 = request.form.get("num2", "").strip()
+            op = request.form.get("op", "+")
+
+            try:
+                a = float(num1)
+                b = float(num2)
+
+                if op == "+":
+                    result = a + b
+                elif op == "-":
+                    result = a - b
+                elif op == "*":
+                    result = a * b
+                elif op == "/":
+                    if b == 0:
+                        error = "Error: Cannot divide by zero."
+                    else:
+                        result = a / b
                 else:
-                    result = a / b
-            else:
-                error = "Invalid operation."
+                    error = "Invalid operation."
 
-            if error is None:
-                expression = f"{a} {op} {b}"
-                # Prepend to history
-                history.insert(0, {"expression": expression, "result": result})
-                history = history[:MAX_HISTORY]
-        except ValueError:
-            error = "Please enter valid numbers."
+                if error is None:
+                    expression = f"{a} {op} {b}"
+                    # Prepend to history
+                    history.insert(0, {"expression": expression, "result": result})
+                    history[:] = history[:MAX_HISTORY]
+            except ValueError:
+                error = "Please enter valid numbers."
 
     return render_template_string(
         HTML,
@@ -491,6 +641,13 @@ def calculator():
         error=error,
         expression=expression,
         history=history,
+        adv_expression=adv_expression,
+        adv_result=adv_result,
+        adv_error=adv_error,
+        graph_url=graph_url,
+        x_from=x_from,
+        x_to=x_to,
+        graph_requested=graph_requested,
     )
 
 
