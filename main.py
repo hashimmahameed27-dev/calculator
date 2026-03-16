@@ -389,24 +389,22 @@ HTML = """
             <div class="row">
               <div>
                 <label for="num1">First value</label>
-                <input
+              <input
                   id="num1"
                   type="text"
                   name="num1"
                   inputmode="decimal"
-                  placeholder="e.g. 42.5"
                   value="{{ num1 or '' }}"
                   required
                 >
               </div>
               <div>
                 <label for="num2">Second value</label>
-                <input
+              <input
                   id="num2"
                   type="text"
                   name="num2"
                   inputmode="decimal"
-                  placeholder="e.g. 3.14"
                   value="{{ num2 or '' }}"
                   required
                 >
