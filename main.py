@@ -539,6 +539,60 @@ HTML = """
             </div>
           {% endif %}
 
+          <hr style="margin: 1.4rem 0; border: none; border-top: 1px solid rgba(30,64,175,0.6);" />
+
+          <div class="subtitle">
+            Simultaneous equations (2×2): solve for <code>x</code> and <code>y</code> in:
+            <code>a·x + b·y = c</code> and <code>d·x + e·y = f</code>
+          </div>
+
+          <form method="post" novalidate>
+            <input type="hidden" name="mode" value="simul">
+
+            <div class="row">
+              <div>
+                <label for="a">a</label>
+                <input id="a" type="text" name="a" inputmode="decimal" value="{{ s_a or '' }}" required>
+              </div>
+              <div>
+                <label for="b">b</label>
+                <input id="b" type="text" name="b" inputmode="decimal" value="{{ s_b or '' }}" required>
+              </div>
+            </div>
+            <div>
+              <label for="c">c</label>
+              <input id="c" type="text" name="c" inputmode="decimal" value="{{ s_c or '' }}" required>
+            </div>
+
+            <div class="row">
+              <div>
+                <label for="d">d</label>
+                <input id="d" type="text" name="d" inputmode="decimal" value="{{ s_d or '' }}" required>
+              </div>
+              <div>
+                <label for="e">e</label>
+                <input id="e" type="text" name="e" inputmode="decimal" value="{{ s_e or '' }}" required>
+              </div>
+            </div>
+            <div>
+              <label for="f">f</label>
+              <input id="f" type="text" name="f" inputmode="decimal" value="{{ s_f or '' }}" required>
+            </div>
+
+            <button type="submit">Solve (x, y)</button>
+          </form>
+
+          {% if simul_error %}
+            <div class="error">{{ simul_error }}</div>
+          {% elif simul_result is not none %}
+            <div class="result">
+              x = {{ simul_result.x }}, y = {{ simul_result.y }}
+            </div>
+            <div class="expression">
+              {{ simul_expression }}
+            </div>
+          {% endif %}
+
           <footer class="site-footer">
             © 2025 Hashim Mahameed. All rights reserved.
           </footer>
@@ -565,6 +619,10 @@ def calculator():
     x_from = ""
     x_to = ""
     graph_requested = False
+    simul_error = None
+    simul_expression = ""
+    simul_result = None
+    s_a = s_b = s_c = s_d = s_e = s_f = ""
 
     if request.method == "POST":
         mode = request.form.get("mode", "basic")
@@ -626,6 +684,46 @@ def calculator():
                 history[:] = history[:MAX_HISTORY]
             except Exception as exc:  # noqa: BLE001
                 adv_error = f"Could not evaluate expression: {exc}"
+        elif mode == "simul":
+            s_a = request.form.get("a", "").strip()
+            s_b = request.form.get("b", "").strip()
+            s_c = request.form.get("c", "").strip()
+            s_d = request.form.get("d", "").strip()
+            s_e = request.form.get("e", "").strip()
+            s_f = request.form.get("f", "").strip()
+
+            try:
+                a = float(s_a)
+                b = float(s_b)
+                c = float(s_c)
+                d = float(s_d)
+                e = float(s_e)
+                f = float(s_f)
+
+                A = np.array([[a, b], [d, e]], dtype=float)
+                B = np.array([c, f], dtype=float)
+
+                det = float(np.linalg.det(A))
+                if abs(det) < 1e-12:
+                    raise ValueError("No unique solution (determinant is 0).")
+
+                sol = np.linalg.solve(A, B)
+                x_val = float(sol[0])
+                y_val = float(sol[1])
+
+                simul_result = {"x": x_val, "y": y_val}
+                simul_expression = f"{a}·x + {b}·y = {c}  and  {d}·x + {e}·y = {f}"
+
+                history.insert(
+                    0,
+                    {
+                        "expression": simul_expression,
+                        "result": f"x={x_val}, y={y_val}",
+                    },
+                )
+                history[:] = history[:MAX_HISTORY]
+            except Exception as exc:  # noqa: BLE001
+                simul_error = f"Could not solve: {exc}"
         else:
             num1 = request.form.get("num1", "").strip()
             num2 = request.form.get("num2", "").strip()
@@ -673,6 +771,15 @@ def calculator():
         x_from=x_from,
         x_to=x_to,
         graph_requested=graph_requested,
+        simul_error=simul_error,
+        simul_expression=simul_expression,
+        simul_result=simul_result,
+        s_a=s_a,
+        s_b=s_b,
+        s_c=s_c,
+        s_d=s_d,
+        s_e=s_e,
+        s_f=s_f,
     )
 
 
